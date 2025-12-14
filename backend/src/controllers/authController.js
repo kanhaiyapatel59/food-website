@@ -166,7 +166,7 @@ exports.changePassword = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid current password' });
         }
         
-        // Update password and let the Mongoose pre-save hook hash it
+        
         user.password = newPassword;
         await user.save(); 
 
