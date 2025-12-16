@@ -31,6 +31,10 @@ const productRoutes = require('./src/routes/productRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const feedbackRoutes = require('./src/routes/feedbackRoutes');
+const wishlistRoutes = require('./src/routes/wishlistRoutes');
+const reviewRoutes = require('./src/routes/reviewRoutes');
+const couponRoutes = require('./src/routes/couponRoutes');
+const analyticsRoutes = require('./src/routes/analyticsRoutes');
 
 // Routes
 app.get('/', (req, res) => {
@@ -47,6 +51,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -66,7 +74,7 @@ app.use('*', (req, res) => {
 });
 
 // Server port
-const PORT = 3003;
+const PORT = process.env.PORT || 3004;
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

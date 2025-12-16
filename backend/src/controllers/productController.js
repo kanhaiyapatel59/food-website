@@ -7,27 +7,99 @@ const mongoose = require('mongoose');
 // ==========================================================
 exports.getProducts = async (req, res) => {
     try {
-        const { category, search, featured } = req.query;
-        // ... (rest of the code for getProducts)
+        const { 
+            category, 
+            search, 
+            featured, 
+            minPrice, 
+            maxPrice, 
+            ingredients, 
+            sortBy, 
+            sortOrder = 'asc',
+            limit,
+            page = 1
+        } = req.query;
+        
         let query = {};
         
+        // Category filter
         if (category && category !== 'all') {
             query.category = category;
         }
         
+        // Enhanced search - name, description, and ingredients
         if (search) {
-            query.name = { $regex: search, $options: 'i' };
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { ingredients: { $in: [new RegExp(search, 'i')] } }
+            ];
         }
         
+        // Ingredients filter
+        if (ingredients) {
+            const ingredientList = ingredients.split(',').map(ing => ing.trim());
+            query.ingredients = { $in: ingredientList.map(ing => new RegExp(ing, 'i')) };
+        }
+        
+        // Featured filter
         if (featured === 'true') {
             query.isFeatured = true;
         }
         
-        const products = await Product.find(query);
+        // Price range filter
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = parseFloat(minPrice);
+            if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+        }
+        
+        // Build sort object
+        let sortObj = {};
+        if (sortBy) {
+            switch (sortBy) {
+                case 'price':
+                    sortObj.price = 1; // Low to high
+                    break;
+                case 'price-desc':
+                    sortObj.price = -1; // High to low
+                    break;
+                case 'name':
+                    sortObj.name = 1;
+                    break;
+                case 'newest':
+                    sortObj.createdAt = -1;
+                    break;
+                case 'featured':
+                    sortObj.isFeatured = -1;
+                    break;
+                default:
+                    sortObj.createdAt = -1;
+            }
+        } else {
+            sortObj.createdAt = -1; // Default sort by newest
+        }
+        
+        // Pagination
+        const pageNum = parseInt(page);
+        const limitNum = limit ? parseInt(limit) : 0;
+        const skip = limitNum > 0 ? (pageNum - 1) * limitNum : 0;
+        
+        let productsQuery = Product.find(query).sort(sortObj);
+        
+        if (limitNum > 0) {
+            productsQuery = productsQuery.skip(skip).limit(limitNum);
+        }
+        
+        const products = await productsQuery;
+        const totalProducts = await Product.countDocuments(query);
         
         res.status(200).json({
             success: true,
             count: products.length,
+            total: totalProducts,
+            page: pageNum,
+            pages: limitNum > 0 ? Math.ceil(totalProducts / limitNum) : 1,
             data: products
         });
     } catch (error) {
