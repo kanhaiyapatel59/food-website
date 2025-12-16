@@ -11,7 +11,7 @@ const Product = require('./src/models/Product');
 const seedDatabase = async () => {
     try {
         // Connect to MongoDB
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ Connected to MongoDB');
 
         // Clear existing data

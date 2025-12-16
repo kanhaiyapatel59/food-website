@@ -6,15 +6,16 @@ const {
     login, 
     getProfile, 
     updateProfile, 
-    changePassword 
+    changePassword,
+    googleAuth 
 } = require('../controllers/authController'); 
 const { protect } = require('../middleware/authMiddleware');
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google', googleAuth);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
-// ✅ NEW ROUTE: Fixes the PUT /api/auth/password 404 error
 router.put('/password', protect, changePassword); 
 
 module.exports = router;

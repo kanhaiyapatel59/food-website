@@ -1,16 +1,36 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { admin } = require('../config/firebase');
 
 // Generate JWT Token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d'
+        expiresIn: process.env.JWT_EXPIRE || '30d'
     });
+};
+
+// Input validation helper
+const validateInput = (fields) => {
+    for (const [key, value] of Object.entries(fields)) {
+        if (!value || value.trim() === '') {
+            return `${key} is required`;
+        }
+    }
+    return null;
 };
 
 exports.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
+
+        // Validate input
+        const validationError = validateInput({ name, email, password });
+        if (validationError) {
+            return res.status(400).json({
+                success: false,
+                message: validationError
+            });
+        }
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -54,6 +74,15 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        // Validate input
+        const validationError = validateInput({ email, password });
+        if (validationError) {
+            return res.status(400).json({
+                success: false,
+                message: validationError
+            });
+        }
 
         // Check for user
         const user = await User.findOne({ email }).select('+password');
@@ -183,4 +212,58 @@ exports.changePassword = async (req, res) => {
         });
     }
 };
+// Google Authentication
+exports.googleAuth = async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                message: 'Firebase token is required'
+            });
+        }
+
+        // Verify Firebase token
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const { email, name, picture } = decodedToken;
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user
+            user = await User.create({
+                name: name || 'Google User',
+                email,
+                password: Math.random().toString(36).slice(-8), // Random password for Google users
+                profileImage: picture
+            });
+        }
+
+        // Generate JWT token
+        const jwtToken = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Google authentication successful',
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                profileImage: user.profileImage,
+                token: jwtToken
+            }
+        });
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        res.status(401).json({
+            success: false,
+            message: 'Invalid Firebase token',
+            error: error.message
+        });
+    }
+};
+
 // authcontroller

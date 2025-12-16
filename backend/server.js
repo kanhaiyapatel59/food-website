@@ -2,8 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { initializeFirebase } = require('./src/config/firebase');
 
 dotenv.config();
+
+// Initialize Firebase Admin
+initializeFirebase();
 
 
 const app = express();
@@ -62,7 +66,7 @@ app.use('*', (req, res) => {
 });
 
 // Server port
-const PORT = process.env.PORT || 3000;
+const PORT = 3003;
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

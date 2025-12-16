@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['burgers', 'pizza', 'salads', 'desserts', 'drinks', 'other']
+        enum: ['burgers', 'pizza', 'pasta', 'salads', 'desserts', 'appetizers', 'seafood', 'beverages', 'chicken', 'steaks', 'sandwiches', 'soups', 'breakfast', 'healthy', 'other']
     },
     ingredients: [String],
     nutritionalInfo: {
