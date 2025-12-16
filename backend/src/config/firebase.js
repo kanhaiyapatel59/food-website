@@ -1,8 +1,6 @@
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin SDK
 const initializeFirebase = () => {
-    // Skip Firebase if credentials not configured
     if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === 'your-firebase-project-id') {
         console.log('⚠️  Firebase credentials not configured, skipping');
         return null;

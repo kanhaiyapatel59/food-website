@@ -39,6 +39,7 @@ exports.addToCart = async (req, res) => {
     try {
         const { productId, quantity = 1 } = req.body;
         const userId = req.user.id;
+        console.log('AddToCart called:', { productId, quantity, userId });
 
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({
@@ -73,11 +74,17 @@ exports.addToCart = async (req, res) => {
             });
         }
 
-        await cart.save();
+        console.log('About to save cart:', cart.toObject());
+        const savedCart = await cart.save();
+        console.log('Cart saved to DB:', savedCart._id, 'Items count:', savedCart.items.length);
+        
+        // Verify it's actually in the database
+        const verifyCart = await Cart.findById(savedCart._id);
+        console.log('Verification - Cart exists in DB:', !!verifyCart, verifyCart ? verifyCart.items.length : 0);
 
         res.status(200).json({
             success: true,
-            data: cart
+            data: savedCart
         });
 
     } catch (error) {
@@ -94,7 +101,8 @@ exports.addToCart = async (req, res) => {
 // ===============================
 exports.updateQuantity = async (req, res) => {
     try {
-        const { productId, quantity } = req.body;
+        const { productId } = req.params;
+        const { quantity } = req.body;
         const cart = await getOrCreateCart(req.user.id);
 
         const item = cart.items.find(

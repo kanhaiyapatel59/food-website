@@ -1,4 +1,70 @@
 const Order = require("../models/Order");
+const mongoose = require('mongoose');
+
+// Get all orders for admin
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate('user', 'name email')
+      .populate('items.product', 'name')
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get user's orders
+exports.getUserOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user.id })
+      .populate('items.product', 'name')
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get single order
+exports.getOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('items.product', 'name');
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 exports.createOrder = async (req, res) => {
   try {
@@ -6,58 +72,66 @@ exports.createOrder = async (req, res) => {
       items,
       shippingAddress,
       paymentMethod,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice,
+      totalAmount,
+      paymentStatus
     } = req.body;
 
     if (!items || items.length === 0) {
-      return res.status(400).json({ message: "No order items" });
+      return res.status(400).json({ 
+        success: false,
+        message: "No order items" 
+      });
     }
 
-    // 🛑 TEMPORARILY DISABLED DB INTERACTION TO FIX VALIDATION ERRORS
-    // Since you only want to show a success message on the frontend for now,
-    // we are commenting out the Mongoose Order.create() call.
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ 
+        success: false,
+        message: "User not authenticated" 
+      });
+    }
 
-    /*
+    // Calculate prices
+    const itemsPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const shippingPrice = 5.00;
+    const taxPrice = itemsPrice * 0.08;
+    const totalPrice = totalAmount || (itemsPrice + shippingPrice + taxPrice);
+
+    // Transform items to match Order model
+    const orderItems = items.map(item => ({
+      product: item.product || item._id || item.id || new mongoose.Types.ObjectId(),
+      name: item.name,
+      image: item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop',
+      price: item.price,
+      quantity: item.quantity
+    }));
+
     const order = await Order.create({
-      user: req.user._id,
-      items,
-      shippingAddress,
-      paymentMethod,
+      user: req.user.id,
+      items: orderItems,
+      shippingAddress: shippingAddress || {
+        address: "Default Address",
+        city: "Default City", 
+        postalCode: "00000",
+        country: "USA"
+      },
+      paymentMethod: paymentMethod || 'card',
       itemsPrice,
       taxPrice,
       shippingPrice,
-      totalPrice,
+      totalPrice
     });
-    */
-
-    // ---------------------------------------------------------------------
-    // 🔔 SIMULATION: Return a success status without hitting the database
-    // ---------------------------------------------------------------------
-
-    console.log("SIMULATION: Order received and validated.");
-    console.log("Items received:", items.length);
 
     res.status(201).json({
       success: true,
-      message: "Order placed successfully (DB saving is temporarily disabled).",
-      // Returning an empty object or a dummy structure instead of the real 'order' object
-      order: {
-        _id: "SIMULATED_ID_" + Date.now(),
-        totalPrice: totalPrice,
-        // Add other necessary fields if the frontend expects them
-      },
+      message: "Order placed successfully",
+      data: order
     });
 
-    // ---------------------------------------------------------------------
-
   } catch (error) {
-
     console.error("ORDER ERROR:", error);
     res.status(500).json({
-      message: error.message,
+      success: false,
+      message: error.message
     });
   }
 };
