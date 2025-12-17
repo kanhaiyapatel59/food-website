@@ -38,6 +38,7 @@ const wishlistRoutes = require('./src/routes/wishlistRoutes');
 const reviewRoutes = require('./src/routes/reviewRoutes');
 const couponRoutes = require('./src/routes/couponRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
+const groupOrderRoutes = require('./src/routes/groupOrderRoutes');
 
 // Routes
 app.get('/', (req, res) => {
@@ -58,6 +59,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/group-orders', groupOrderRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

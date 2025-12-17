@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const mongoose = require('mongoose');
 
 // Get all orders for admin
@@ -96,14 +97,33 @@ exports.createOrder = async (req, res) => {
     const taxPrice = itemsPrice * 0.08;
     const totalPrice = totalAmount || (itemsPrice + shippingPrice + taxPrice);
 
-    // Transform items to match Order model
-    const orderItems = items.map(item => ({
-      product: item.product || item._id || item.id || new mongoose.Types.ObjectId(),
-      name: item.name,
-      image: item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop',
-      price: item.price,
-      quantity: item.quantity
-    }));
+    // Transform items to match Order model and update stock
+    const orderItems = [];
+    for (const item of items) {
+      const productId = item.product || item._id || item.id;
+      
+      // Update product stock
+      const product = await Product.findById(productId);
+      if (product) {
+        if (product.stock >= item.quantity) {
+          product.stock -= item.quantity;
+          await product.save();
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`
+          });
+        }
+      }
+      
+      orderItems.push({
+        product: productId,
+        name: item.name,
+        image: item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop',
+        price: item.price,
+        quantity: item.quantity
+      });
+    }
 
     const order = await Order.create({
       user: req.user.id,
