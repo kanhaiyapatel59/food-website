@@ -159,7 +159,16 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, email, phone, address } = req.body;
+        const { 
+            name, 
+            email, 
+            phone, 
+            address, 
+            bio, 
+            dateOfBirth, 
+            dietaryRestrictions, 
+            favoriteCategories 
+        } = req.body;
         
         const user = await User.findById(req.user.id);
         
@@ -170,10 +179,35 @@ exports.updateProfile = async (req, res) => {
             });
         }
 
+        // Update basic fields
         user.name = name || user.name;
         user.email = email || user.email;
         user.phone = phone || user.phone;
-        user.address = address || user.address;
+        
+        // Handle address - can be string or object
+        if (address !== undefined) {
+            if (typeof address === 'string') {
+                user.address = { street: address };
+            } else {
+                user.address = address;
+            }
+        }
+        
+        user.bio = bio || user.bio;
+        user.dateOfBirth = dateOfBirth || user.dateOfBirth;
+        
+        // Update preferences
+        if (!user.preferences) {
+            user.preferences = {};
+        }
+        
+        if (dietaryRestrictions !== undefined) {
+            user.preferences.dietaryRestrictions = dietaryRestrictions;
+        }
+        
+        if (favoriteCategories !== undefined) {
+            user.preferences.favoriteCategories = favoriteCategories;
+        }
         
         const updatedUser = await user.save();
         
@@ -183,6 +217,7 @@ exports.updateProfile = async (req, res) => {
             data: updatedUser
         });
     } catch (error) {
+        console.error('Profile update error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error',
@@ -227,10 +262,10 @@ exports.changePassword = async (req, res) => {
         });
     }
 };
-// Google Authentication
-exports.googleAuth = async (req, res) => {
+// Social Authentication (Google, Facebook, Apple)
+exports.socialAuth = async (req, res) => {
     try {
-        const { token } = req.body;
+        const { token, provider } = req.body;
 
         if (!token) {
             return res.status(400).json({
@@ -241,7 +276,7 @@ exports.googleAuth = async (req, res) => {
 
         // Verify Firebase token
         const decodedToken = await admin.auth().verifyIdToken(token);
-        const { email, name, picture } = decodedToken;
+        const { email, name, picture, firebase } = decodedToken;
 
         // Check if user exists
         let user = await User.findOne({ email });
@@ -249,11 +284,18 @@ exports.googleAuth = async (req, res) => {
         if (!user) {
             // Create new user
             user = await User.create({
-                name: name || 'Google User',
+                name: name || `${provider} User`,
                 email,
-                password: Math.random().toString(36).slice(-8), // Random password for Google users
-                profileImage: picture
+                password: Math.random().toString(36).slice(-8), // Random password for social users
+                profileImage: picture,
+                authProvider: provider?.toLowerCase() || 'google'
             });
+        } else {
+            // Update profile image if not set
+            if (picture && !user.profileImage) {
+                user.profileImage = picture;
+                await user.save();
+            }
         }
 
         // Generate JWT token
@@ -261,24 +303,31 @@ exports.googleAuth = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Google authentication successful',
+            message: `${provider} authentication successful`,
             data: {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
                 profileImage: user.profileImage,
+                authProvider: user.authProvider,
                 token: jwtToken
             }
         });
     } catch (error) {
-        console.error('Google Auth Error:', error);
+        console.error('Social Auth Error:', error);
         res.status(401).json({
             success: false,
             message: 'Invalid Firebase token',
             error: error.message
         });
     }
+};
+
+// Backward compatibility - Google Auth
+exports.googleAuth = async (req, res) => {
+    req.body.provider = 'Google';
+    return exports.socialAuth(req, res);
 };
 
 // authcontroller

@@ -2,12 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { initializeFirebase } = require('./src/config/firebase');
-
 dotenv.config();
 
 // Initialize Firebase Admin
-initializeFirebase();
+try {
+    const { initializeFirebase } = require('./src/config/firebase');
+    initializeFirebase();
+} catch (error) {
+    console.log('⚠️  Firebase initialization skipped:', error.message);
+}
 
 
 const app = express();

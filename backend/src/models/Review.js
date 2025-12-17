@@ -21,7 +21,31 @@ const reviewSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 500
-  }
+  },
+  images: [String],
+  helpful: {
+    type: Number,
+    default: 0
+  },
+  helpfulBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  verified: {
+    type: Boolean,
+    default: false
+  },
+  replies: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    message: String,
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, { timestamps: true });
 
 // Ensure one review per user per product

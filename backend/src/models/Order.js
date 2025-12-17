@@ -64,6 +64,24 @@ const orderSchema = new mongoose.Schema(
       code: { type: String },
       discountAmount: { type: Number, default: 0 }
     },
+
+    status: {
+      type: String,
+      enum: ['pending', 'preparing', 'ready', 'delivered', 'cancelled'],
+      default: 'pending'
+    },
+
+    statusHistory: [{
+      status: {
+        type: String,
+        enum: ['pending', 'preparing', 'ready', 'delivered', 'cancelled']
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      },
+      note: String
+    }],
   },
   { timestamps: true }
 );

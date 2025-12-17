@@ -17,20 +17,18 @@ async function testCoupon() {
       minimumOrderAmount: 20,
       maxDiscountAmount: 50,
       usageLimit: 100,
-      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      createdBy: new mongoose.Types.ObjectId() // Dummy admin ID
+      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 
+      createdBy: new mongoose.Types.ObjectId() 
     });
 
     await testCoupon.save();
     console.log('✅ Test coupon created:', testCoupon.code);
-
-    // Create another coupon
     const testCoupon2 = new Coupon({
       code: 'SAVE5',
       discountType: 'fixed',
       discountValue: 5,
       minimumOrderAmount: 15,
-      expiryDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
+      expiryDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), 
       createdBy: new mongoose.Types.ObjectId()
     });
 

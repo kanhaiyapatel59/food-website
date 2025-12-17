@@ -37,7 +37,7 @@ const addMoreCategories = async () => {
                 nutritionalInfo: { calories: 520, protein: '8g', carbs: '68g', fat: '24g' }
             },
 
-            // MORE SALADS
+            
             {
                 name: 'Chicken Caesar Salad',
                 description: 'Grilled chicken breast over classic Caesar salad',

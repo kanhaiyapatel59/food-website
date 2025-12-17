@@ -25,8 +25,31 @@ const userSchema = new mongoose.Schema({
         default: 'user'
     },
     phone: String,
-    address: String,
+    address: {
+        street: String,
+        city: String,
+        state: String,
+        zipCode: String,
+        country: String
+    },
     profileImage: String,
+    bio: String,
+    dateOfBirth: Date,
+    preferences: {
+        dietaryRestrictions: [String],
+        favoriteCategories: [String],
+        notifications: {
+            email: { type: Boolean, default: true },
+            sms: { type: Boolean, default: false },
+            push: { type: Boolean, default: true }
+        }
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google', 'facebook', 'apple'],
+        default: 'local'
+    },
+    socialId: String,
     createdAt: {
         type: Date,
         default: Date.now

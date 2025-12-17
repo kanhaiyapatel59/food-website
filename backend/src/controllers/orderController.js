@@ -118,7 +118,14 @@ exports.createOrder = async (req, res) => {
       itemsPrice,
       taxPrice,
       shippingPrice,
-      totalPrice
+      totalPrice,
+      coupon: req.body.coupon,
+      status: 'pending',
+      statusHistory: [{
+        status: 'pending',
+        timestamp: new Date(),
+        note: 'Order placed successfully'
+      }]
     });
 
     res.status(201).json({
@@ -129,6 +136,41 @@ exports.createOrder = async (req, res) => {
 
   } catch (error) {
     console.error("ORDER ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Update order status (Admin only)
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status, note } = req.body;
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    order.status = status;
+    order.statusHistory.push({
+      status,
+      timestamp: new Date(),
+      note: note || `Status updated to ${status}`
+    });
+    
+    await order.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Order status updated successfully',
+      data: order
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message

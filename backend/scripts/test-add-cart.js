@@ -8,8 +8,6 @@ const testAddToCart = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Connected to MongoDB');
-
-        // Get first user and product
         const user = await User.findOne();
         const product = await Product.findOne();
         

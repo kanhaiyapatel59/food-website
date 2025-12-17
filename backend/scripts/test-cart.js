@@ -6,8 +6,6 @@ const testCart = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Connected to MongoDB');
-
-        // Find a cart and check its values
         const cart = await Cart.findOne();
         if (cart) {
             console.log('Cart found:', {
@@ -16,8 +14,6 @@ const testCart = async () => {
                 totalItems: cart.totalItems,
                 totalPrice: cart.totalPrice
             });
-
-            // Manually trigger save to test pre-save hook
             await cart.save();
             console.log('After save:', {
                 totalItems: cart.totalItems,

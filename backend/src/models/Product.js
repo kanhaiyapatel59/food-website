@@ -35,6 +35,15 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    stock: {
+        type: Number,
+        default: 100,
+        min: 0
+    },
+    lowStockThreshold: {
+        type: Number,
+        default: 10
+    },
     isFeatured: {
         type: Boolean,
         default: false
