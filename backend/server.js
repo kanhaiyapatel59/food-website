@@ -39,6 +39,9 @@ const reviewRoutes = require('./src/routes/reviewRoutes');
 const couponRoutes = require('./src/routes/couponRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
 const groupOrderRoutes = require('./src/routes/groupOrderRoutes');
+const reservationRoutes = require('./src/routes/reservationRoutes');
+const foodDiaryRoutes = require('./src/routes/foodDiaryRoutes');
+const promotionRoutes = require('./src/routes/promotionRoutes');
 
 // Routes
 app.get('/', (req, res) => {
@@ -60,6 +63,9 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/group-orders', groupOrderRoutes);
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/food-diary', foodDiaryRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
