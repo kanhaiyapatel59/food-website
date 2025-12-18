@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 const mongoose = require('mongoose');
 
 // Get all orders for admin
@@ -148,10 +149,20 @@ exports.createOrder = async (req, res) => {
       }]
     });
 
+    // Award loyalty points (10 points per $1 spent)
+    const pointsEarned = Math.floor(totalPrice * 10);
+    let loyalty = await LoyaltyPoints.findOne({ user: req.user.id });
+    if (!loyalty) {
+      loyalty = new LoyaltyPoints({ user: req.user.id });
+    }
+    loyalty.addPoints(pointsEarned, `Order #${order._id}`, order._id);
+    await loyalty.save();
+
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
-      data: order
+      data: order,
+      pointsEarned
     });
 
   } catch (error) {

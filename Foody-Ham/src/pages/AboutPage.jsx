@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaLeaf, FaShippingFast, FaAward, FaHeart, FaClock, FaUsers, FaCheese, FaFish, FaAppleAlt, FaCoffee, FaUtensils, FaStar, FaQuoteLeft, FaQuoteRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import AnimatedCounter from '../components/AnimatedCounter';
+import FadeInAnimation from '../components/FadeInAnimation';
 
 // Background images for the hero slider
 const ABOUT_BACKGROUNDS = [
@@ -265,16 +267,18 @@ function AboutPage() {
             <div className="p-12">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                 {[
-                  { value: "10K+", label: "Happy Customers", description: "Served with love" },
-                  { value: "50+", label: "Restaurant Partners", description: "Top chefs & kitchens" },
-                  { value: "30min", label: "Avg. Delivery", description: "Fast & reliable" },
-                  { value: "4.9★", label: "Rating", description: "Consistently excellent" }
+                  { value: 10000, suffix: "+", label: "Happy Customers", description: "Served with love" },
+                  { value: 50, suffix: "+", label: "Restaurant Partners", description: "Top chefs & kitchens" },
+                  { value: 30, suffix: "min", label: "Avg. Delivery", description: "Fast & reliable" },
+                  { value: 4.9, suffix: "★", label: "Rating", description: "Consistently excellent" }
                 ].map((stat, index) => (
-                  <div key={index} className="text-center text-white">
-                    <div className="text-5xl md:text-6xl font-black mb-2 drop-shadow-lg">{stat.value}</div>
+                  <FadeInAnimation key={index} delay={index * 200} className="text-center text-white">
+                    <div className="text-5xl md:text-6xl font-black mb-2 drop-shadow-lg">
+                      <AnimatedCounter end={stat.value} suffix={stat.suffix} duration={2000} />
+                    </div>
                     <div className="text-lg font-semibold mb-1">{stat.label}</div>
                     <div className="text-orange-100 text-sm">{stat.description}</div>
-                  </div>
+                  </FadeInAnimation>
                 ))}
               </div>
             </div>

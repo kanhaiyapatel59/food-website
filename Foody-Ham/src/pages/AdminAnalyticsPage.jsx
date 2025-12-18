@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import AnimatedCounter from '../components/AnimatedCounter';
+import FadeInAnimation from '../components/FadeInAnimation';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -55,13 +57,16 @@ const AdminAnalyticsPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 dark:bg-gray-950 min-h-screen">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Sales Analytics</h1>
+        <div>
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2">Sales Analytics</h1>
+          <p className="text-gray-600 dark:text-gray-400">Comprehensive insights into your business performance</p>
+        </div>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md"
+          className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-orange-500"
         >
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
@@ -69,26 +74,67 @@ const AdminAnalyticsPage = () => {
         </select>
       </div>
 
-      {/* Overview Cards */}
+      {/* Enhanced Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Sales</h3>
-          <p className="text-2xl font-bold text-green-600">${analytics?.totalSales?.toFixed(2) || 0}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Orders</h3>
-          <p className="text-2xl font-bold text-blue-600">{analytics?.totalOrders || 0}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">New Users</h3>
-          <p className="text-2xl font-bold text-purple-600">{analytics?.newUsers || 0}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Avg Order Value</h3>
-          <p className="text-2xl font-bold text-orange-600">
-            ${analytics?.totalOrders ? (analytics.totalSales / analytics.totalOrders).toFixed(2) : 0}
-          </p>
-        </div>
+        <FadeInAnimation delay={0}>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl shadow-lg text-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold opacity-90">Total Sales</h3>
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
+                💰
+              </div>
+            </div>
+            <p className="text-3xl font-bold mb-2">
+              $<AnimatedCounter end={analytics?.totalSales || 0} duration={2000} />
+            </p>
+            <p className="text-green-100 text-sm">+15% from last period</p>
+          </div>
+        </FadeInAnimation>
+        
+        <FadeInAnimation delay={200}>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg text-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold opacity-90">Total Orders</h3>
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
+                📦
+              </div>
+            </div>
+            <p className="text-3xl font-bold mb-2">
+              <AnimatedCounter end={analytics?.totalOrders || 0} duration={2000} />
+            </p>
+            <p className="text-blue-100 text-sm">+8% from last period</p>
+          </div>
+        </FadeInAnimation>
+        
+        <FadeInAnimation delay={400}>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold opacity-90">New Users</h3>
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
+                👥
+              </div>
+            </div>
+            <p className="text-3xl font-bold mb-2">
+              <AnimatedCounter end={analytics?.newUsers || 0} duration={2000} />
+            </p>
+            <p className="text-purple-100 text-sm">+22% from last period</p>
+          </div>
+        </FadeInAnimation>
+        
+        <FadeInAnimation delay={600}>
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-xl shadow-lg text-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold opacity-90">Avg Order Value</h3>
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
+                📊
+              </div>
+            </div>
+            <p className="text-3xl font-bold mb-2">
+              $<AnimatedCounter end={analytics?.totalOrders ? (analytics.totalSales / analytics.totalOrders) : 0} duration={2000} />
+            </p>
+            <p className="text-orange-100 text-sm">+5% from last period</p>
+          </div>
+        </FadeInAnimation>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

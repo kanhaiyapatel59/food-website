@@ -14,11 +14,11 @@ function WishlistPage() {
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
+      <div className="container mx-auto px-4 py-12 text-center dark:bg-gray-950 min-h-screen">
         <div className="max-w-md mx-auto">
-          <FaHeart className="text-6xl text-gray-300 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Your wishlist is empty</h1>
-          <p className="text-gray-600 mb-8">Save your favorite items for later!</p>
+          <FaHeart className="text-6xl text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">Your wishlist is empty</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">Save your favorite items for later!</p>
           <Link
             to="/menu"
             className="bg-red-500 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-red-600 transition duration-300 inline-block"
@@ -31,8 +31,8 @@ function WishlistPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+    <div className="container mx-auto px-4 py-12 dark:bg-gray-950 min-h-screen transition-colors duration-300">
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 flex items-center gap-3">
         <FaHeart className="text-red-500" />
         My Wishlist ({wishlistItems.length})
       </h1>
@@ -41,7 +41,7 @@ function WishlistPage() {
         {wishlistItems.map(item => {
           const product = item.product || item;
           return (
-            <div key={product._id || product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 transform">
+            <div key={product._id || product.id} className="bg-white dark:bg-gray-900 rounded-lg shadow-md dark:shadow-gray-800 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 transform dark:border dark:border-gray-800">
               <Link to={`/product/${product._id || product.id}`}>
                 <img 
                   src={product.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop'} 
@@ -52,12 +52,12 @@ function WishlistPage() {
               
               <div className="p-4">
                 <Link to={`/product/${product._id || product.id}`}>
-                  <h3 className="text-lg font-bold text-gray-800 mb-2 hover:text-red-500 transition-colors">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                     {product.name}
                   </h3>
                 </Link>
                 
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
                   {product.description}
                 </p>
                 
@@ -68,7 +68,7 @@ function WishlistPage() {
                   {product.averageRating > 0 && (
                     <div className="flex items-center gap-1">
                       <span className="text-yellow-500">★</span>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {product.averageRating} ({product.totalReviews})
                       </span>
                     </div>
@@ -86,7 +86,7 @@ function WishlistPage() {
                   
                   <button
                     onClick={() => removeFromWishlist(product._id || product.id)}
-                    className="bg-gray-200 text-gray-600 py-2 px-3 rounded-lg hover:bg-gray-300 transition duration-300"
+                    className="bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-200 py-2 px-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition duration-300 dark:border dark:border-gray-700"
                     title="Remove from wishlist"
                   >
                     <FaTrash />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import FoodCard from '../components/FoodCard';
-// 🚨 CHANGE: Imported Link from react-router-dom
+import SkeletonCard from '../components/SkeletonCard';
+import VoiceSearch from '../components/VoiceSearch';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -50,6 +51,8 @@ function MenuPage() {
   const [debouncedCategory, setDebouncedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [ingredientFilter, setIngredientFilter] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('');
+  const [dietaryFilter, setDietaryFilter] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -100,6 +103,12 @@ function MenuPage() {
       if (filters.ingredients) {
           params.append('ingredients', filters.ingredients);
       }
+      if (filters.minRating) {
+          params.append('minRating', filters.minRating);
+      }
+      if (filters.dietary) {
+          params.append('dietary', filters.dietary);
+      }
       if (filters.sortBy) {
           params.append('sortBy', filters.sortBy);
       }
@@ -149,26 +158,17 @@ function MenuPage() {
       minPrice: priceRange.min,
       maxPrice: priceRange.max,
       ingredients: ingredientFilter,
+      minRating: ratingFilter,
+      dietary: dietaryFilter,
       sortBy: sortBy
     };
     fetchProducts(debouncedCategory, debouncedSearch, filters);
-  }, [fetchProducts, debouncedCategory, debouncedSearch, priceRange, ingredientFilter, sortBy]);
+  }, [fetchProducts, debouncedCategory, debouncedSearch, priceRange, ingredientFilter, ratingFilter, dietaryFilter, sortBy]);
 
 
   // 🚨 REMOVED: handleProductClick function is no longer needed
 
-  if (loading && menuItems.length === 0) {
-    return (
-      <div className="relative min-h-screen bg-gray-900">
-        <div className="absolute inset-0 flex justify-center items-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <div className="text-white text-lg font-semibold">Loading delicious menu...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="bg-gray-900">
@@ -207,20 +207,25 @@ function MenuPage() {
           <div className="bg-gray-800/90 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl">
             {/* Main Search Row */}
             <div className="flex flex-col lg:flex-row gap-4 mb-4">
-              {/* Search Input */}
+              {/* Search Input with Voice */}
               <div className="flex-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search dishes by name, description, or ingredients..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 p-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                    />
+                  </div>
+                  <VoiceSearch onResult={(transcript) => setSearchQuery(transcript)} />
                 </div>
-                <input
-                    type="text"
-                    placeholder="Search dishes by name, description, or ingredients..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 p-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
-                />
               </div>
 
               {/* Category Filter */}
@@ -275,7 +280,7 @@ function MenuPage() {
             {/* Advanced Filters Panel */}
             {showAdvancedFilters && (
               <div className="border-t border-gray-600 pt-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Price Range */}
                   <div>
                     <label className="block text-white text-sm font-medium mb-2">Price Range</label>
@@ -297,16 +302,37 @@ function MenuPage() {
                     </div>
                   </div>
 
-                  {/* Ingredients Filter */}
+                  {/* Rating Filter */}
                   <div>
-                    <label className="block text-white text-sm font-medium mb-2">Ingredients</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., cheese, tomato, chicken"
-                      value={ingredientFilter}
-                      onChange={(e) => setIngredientFilter(e.target.value)}
-                      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
+                    <label className="block text-white text-sm font-medium mb-2">Minimum Rating</label>
+                    <select
+                      value={ratingFilter}
+                      onChange={(e) => setRatingFilter(e.target.value)}
+                      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      <option value="">Any Rating</option>
+                      <option value="4">4+ Stars</option>
+                      <option value="3">3+ Stars</option>
+                      <option value="2">2+ Stars</option>
+                      <option value="1">1+ Stars</option>
+                    </select>
+                  </div>
+
+                  {/* Dietary Preferences */}
+                  <div>
+                    <label className="block text-white text-sm font-medium mb-2">Dietary</label>
+                    <select
+                      value={dietaryFilter}
+                      onChange={(e) => setDietaryFilter(e.target.value)}
+                      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      <option value="">All Diets</option>
+                      <option value="vegetarian">Vegetarian</option>
+                      <option value="vegan">Vegan</option>
+                      <option value="gluten-free">Gluten Free</option>
+                      <option value="keto">Keto</option>
+                      <option value="low-carb">Low Carb</option>
+                    </select>
                   </div>
 
                   {/* Clear Filters */}
@@ -317,11 +343,13 @@ function MenuPage() {
                         setSelectedCategory('all');
                         setPriceRange({ min: '', max: '' });
                         setIngredientFilter('');
+                        setRatingFilter('');
+                        setDietaryFilter('');
                         setSortBy('newest');
                       }}
-                      className="w-full p-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-all"
+                      className="w-full p-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
                     >
-                      Clear All Filters
+                      Clear All
                     </button>
                   </div>
                 </div>
@@ -363,7 +391,13 @@ function MenuPage() {
         )}
 
         {/* Product Grid - Dark Cards */}
-        {menuItems.length === 0 && !loading ? (
+        {loading ? (
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {[...Array(12)].map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          </div>
+        ) : menuItems.length === 0 ? (
           <div className="max-w-4xl mx-auto text-center py-16">
             <div className="bg-gray-800/90 backdrop-blur-sm p-12 rounded-2xl border border-gray-700 shadow-xl">
               <div className="w-24 h-24 mx-auto mb-6 bg-gray-700 rounded-full flex items-center justify-center shadow-inner">
@@ -416,13 +450,19 @@ function MenuPage() {
                         </span>
                       </div>
                       
-                      {item.category && (
-                        <div className="mt-3">
+                      <div className="mt-3 flex items-center justify-between">
+                        {item.category && (
                           <span className="inline-block px-3 py-1 bg-red-900/50 text-red-300 text-sm font-medium rounded-full border border-red-900">
                             {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                           </span>
-                        </div>
-                      )}
+                        )}
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-900/50 text-green-300 text-xs font-medium rounded-full border border-green-900">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {Math.floor(Math.random() * 15) + 20}-{Math.floor(Math.random() * 15) + 35} min
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>

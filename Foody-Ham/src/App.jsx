@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from './context/WishlistContext';
-import { RecentlyViewedProvider } from './context/RecentlyViewedContext'; 
+import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
+import { SpinProvider, useSpin } from './context/SpinContext';
+import SpinWheel from './components/SpinWheel'; 
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
@@ -32,15 +34,15 @@ import ReservationsPage from './pages/ReservationsPage';
 import AdminReservationsPage from './pages/AdminReservationsPage';
 import FoodDiaryPage from './pages/FoodDiaryPage';
 import AdminPromotionsPage from './pages/AdminPromotionsPage';
+import LoyaltyPage from './pages/LoyaltyPage';
+import AdminSpinPage from './pages/AdminSpinPage';
 
-function App() {
+function AppContent() {
+  const { showSpin, closeSpin } = useSpin();
+  
   return (
-    <ErrorBoundary>
+    <>
       <Router>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <RecentlyViewedProvider>
           <Routes>
             {/* Public routes without layout */}
             <Route path="/login" element={<LoginPage />} />
@@ -201,13 +203,46 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              
+              <Route 
+                path="/loyalty" 
+                element={
+                  <ProtectedRoute> 
+                    <LoyaltyPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/admin/spin" 
+                element={
+                  <ProtectedRoute requireAdmin> 
+                    <AdminSpinPage />
+                  </ProtectedRoute>
+                } 
+              />
             </Route>
           </Routes>
-              </RecentlyViewedProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
       </Router>
+      {showSpin && <SpinWheel onClose={closeSpin} />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <RecentlyViewedProvider>
+              <SpinProvider>
+                <AppContent />
+              </SpinProvider>
+            </RecentlyViewedProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

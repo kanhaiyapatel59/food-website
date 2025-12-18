@@ -84,5 +84,14 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Virtual for isAdmin
+userSchema.virtual('isAdmin').get(function() {
+    return this.role === 'admin';
+});
+
+// Ensure virtual fields are serialized
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;

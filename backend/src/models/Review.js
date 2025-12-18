@@ -22,33 +22,23 @@ const reviewSchema = new mongoose.Schema({
     required: true,
     maxlength: 500
   },
-  images: [String],
-  helpful: {
-    type: Number,
-    default: 0
-  },
-  helpfulBy: [{
+  photos: [{
+    url: String,
+    filename: String
+  }],
+  helpful: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
   verified: {
     type: Boolean,
     default: false
-  },
-  replies: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    message: String,
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }]
-}, { timestamps: true });
+  }
+}, {
+  timestamps: true
+});
 
-// Ensure one review per user per product
+reviewSchema.index({ product: 1, createdAt: -1 });
 reviewSchema.index({ user: 1, product: 1 }, { unique: true });
 
 module.exports = mongoose.model('Review', reviewSchema);

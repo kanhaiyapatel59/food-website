@@ -7,6 +7,8 @@ import { FaHeart, FaRegHeart, FaSpinner, FaStar, FaShoppingCart, FaEye, FaTag, F
 import WishlistButton from './WishlistButton';
 import StarRating from './StarRating';
 import SocialShare from './SocialShare';
+import CartAnimation from './CartAnimation';
+import LazyImage from './LazyImage';
 
 function FoodCard({ 
   id, 
@@ -31,6 +33,8 @@ function FoodCard({
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [animationStart, setAnimationStart] = useState({ x: 0, y: 0 });
 
   const product = { 
     id, 
@@ -45,7 +49,6 @@ function FoodCard({
   };
   
   const handleAddToCart = (e) => {
-    // Stop propagation to prevent the click from triggering the main Link navigation
     e.preventDefault(); 
     e.stopPropagation();
     
@@ -54,7 +57,20 @@ function FoodCard({
       return;
     }
     
+    const rect = e.currentTarget.getBoundingClientRect();
+    setAnimationStart({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    });
+    setShowAnimation(true);
+    
     addToCart(product, 1);
+    
+    const cartIcon = document.querySelector('[data-cart-icon]');
+    if (cartIcon) {
+      cartIcon.classList.add('animate-bounce');
+      setTimeout(() => cartIcon.classList.remove('animate-bounce'), 1000);
+    }
   };
 
   const handleToggleFeature = async (e) => {
@@ -123,9 +139,27 @@ function FoodCard({
             </div>
           </div>
         )}
+        
+        {/* New Badge - Top Left (if not featured) */}
+        {!isFeatured && Math.random() > 0.7 && (
+          <div className="absolute top-4 left-4 z-20">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-xl animate-pulse">
+              NEW
+            </div>
+          </div>
+        )}
 
-        {/* Wishlist Button - Top Right */}
-        <div className="absolute top-4 right-4 z-20">
+        {/* Sale Badge - Top Right Corner */}
+        {Math.random() > 0.6 && (
+          <div className="absolute top-4 right-4 z-20">
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-xl transform rotate-3">
+              {Math.floor(Math.random() * 30) + 10}% OFF
+            </div>
+          </div>
+        )}
+        
+        {/* Wishlist Button - Top Right (below sale badge) */}
+        <div className="absolute top-16 right-4 z-20">
           <WishlistButton product={product} className="shadow-lg" />
         </div>
 
@@ -157,13 +191,11 @@ function FoodCard({
             <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
           )}
           
-          {/* Product Image */}
-          <img 
+          {/* Product Image with Lazy Loading */}
+          <LazyImage 
             src={image} 
             alt={name} 
-            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110
-                      ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={() => setImageLoaded(true)}
+            className="w-full h-full transition-all duration-700 group-hover:scale-110"
           />
           
           {/* Hover Overlay with Quick Actions */}
@@ -217,13 +249,19 @@ function FoodCard({
             </div>
           )}
           
-          {category && (
-            <div className="mb-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            {category && (
               <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </span>
-            </div>
-          )}
+            )}
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {Math.floor(Math.random() * 15) + 20}-{Math.floor(Math.random() * 15) + 35}m
+            </span>
+          </div>
         </div>
       </div> 
       {/* 🛑 CONTENT WRAPPER closes here (It is now a div, not a Link) */}
@@ -254,11 +292,20 @@ function FoodCard({
       </div>
 
       {/* Social Share Modal */}
-      <SocialShare 
-        product={product} 
-        isOpen={showShare} 
-        onClose={() => setShowShare(false)} 
-      />
+      {showShare && (
+        <SocialShare 
+          product={product} 
+          onClose={() => setShowShare(false)} 
+        />
+      )}
+
+      {/* Flying Cart Animation */}
+      {showAnimation && (
+        <CartAnimation
+          startPosition={animationStart}
+          onComplete={() => setShowAnimation(false)}
+        />
+      )}
 
     </div>
   );

@@ -1,10 +1,11 @@
 const express = require('express');
-const router = express.Router();
-const { getProductReviews, addReview, deleteReview } = require('../controllers/reviewController');
+const { createReview, getProductReviews, markHelpful, upload } = require('../controllers/reviewController');
 const { protect } = require('../middleware/authMiddleware');
 
+const router = express.Router();
+
+router.post('/', protect, upload.array('photos', 5), createReview);
 router.get('/product/:productId', getProductReviews);
-router.post('/', protect, addReview);
-router.delete('/:reviewId', protect, deleteReview);
+router.put('/:reviewId/helpful', protect, markHelpful);
 
 module.exports = router;

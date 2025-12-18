@@ -22,6 +22,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
@@ -42,6 +43,8 @@ const groupOrderRoutes = require('./src/routes/groupOrderRoutes');
 const reservationRoutes = require('./src/routes/reservationRoutes');
 const foodDiaryRoutes = require('./src/routes/foodDiaryRoutes');
 const promotionRoutes = require('./src/routes/promotionRoutes');
+const loyaltyRoutes = require('./src/routes/loyaltyRoutes');
+const spinRoutes = require('./src/routes/spinRoutes');
 
 // Routes
 app.get('/', (req, res) => {
@@ -66,6 +69,8 @@ app.use('/api/group-orders', groupOrderRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/food-diary', foodDiaryRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/loyalty', loyaltyRoutes);
+app.use('/api/spin', spinRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
