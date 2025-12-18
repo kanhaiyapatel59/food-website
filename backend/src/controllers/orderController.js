@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const LoyaltyPoints = require('../models/LoyaltyPoints');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 
 // Get all orders for admin
@@ -200,6 +201,121 @@ exports.updateOrderStatus = async (req, res) => {
       success: true,
       message: 'Order status updated successfully',
       data: order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Cancel order (User only)
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    // Check if user owns the order
+    if (order.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to cancel this order'
+      });
+    }
+    
+    // Check if order can be cancelled
+    if (!['pending', 'confirmed'].includes(order.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order cannot be cancelled at this stage'
+      });
+    }
+    
+    // Update order status
+    order.status = 'cancelled';
+    order.statusHistory.push({
+      status: 'cancelled',
+      timestamp: new Date(),
+      note: req.body.reason || 'Cancelled by user'
+    });
+    
+    await order.save();
+    
+    // Refund to wallet
+    const user = await User.findById(req.user.id);
+    await user.addToWallet(order.totalPrice);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully. Refund added to wallet.',
+      data: order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get order items for re-order
+exports.getOrderItems = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('items.product', 'name price stock isActive');
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    // Check if user owns the order
+    if (order.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to access this order'
+      });
+    }
+    
+    // Filter available items
+    const availableItems = [];
+    const unavailableItems = [];
+    
+    for (const item of order.items) {
+      if (item.product && item.product.isActive && item.product.stock >= item.quantity) {
+        availableItems.push({
+          id: item.product._id,
+          name: item.name,
+          price: item.product.price, // Use current price
+          image: item.image,
+          quantity: item.quantity
+        });
+      } else {
+        unavailableItems.push({
+          name: item.name,
+          quantity: item.quantity,
+          reason: !item.product ? 'Product no longer exists' : 
+                  !item.product.isActive ? 'Product not available' : 
+                  'Insufficient stock'
+        });
+      }
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        availableItems,
+        unavailableItems
+      }
     });
   } catch (error) {
     res.status(500).json({

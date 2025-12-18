@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema({
         default: 'local'
     },
     socialId: String,
+    walletBalance: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -88,6 +92,20 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.virtual('isAdmin').get(function() {
     return this.role === 'admin';
 });
+
+// Wallet methods
+userSchema.methods.addToWallet = function(amount) {
+    this.walletBalance += amount;
+    return this.save();
+};
+
+userSchema.methods.deductFromWallet = function(amount) {
+    if (this.walletBalance >= amount) {
+        this.walletBalance -= amount;
+        return this.save();
+    }
+    throw new Error('Insufficient wallet balance');
+};
 
 // Ensure virtual fields are serialized
 userSchema.set('toJSON', { virtuals: true });

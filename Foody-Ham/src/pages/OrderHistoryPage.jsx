@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useCart } from '../context/CartContext';
+import { X, RotateCcw } from 'lucide-react';
 
 const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     fetchOrders();
@@ -27,12 +31,76 @@ const OrderHistoryPage = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
+      confirmed: 'bg-blue-100 text-blue-800',
       preparing: 'bg-blue-100 text-blue-800',
       ready: 'bg-green-100 text-green-800',
       delivered: 'bg-gray-100 text-gray-800',
       cancelled: 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const canCancelOrder = (status) => {
+    return ['pending', 'confirmed'].includes(status);
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order? The amount will be refunded to your wallet.')) {
+      return;
+    }
+
+    setActionLoading(orderId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/orders/${orderId}/cancel`,
+        { reason: 'Cancelled by user' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        alert('Order cancelled successfully. Refund added to your wallet.');
+        fetchOrders(); // Refresh orders
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert(error.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleOrderAgain = async (orderId) => {
+    setActionLoading(orderId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/orders/${orderId}/items`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const { availableItems, unavailableItems } = response.data.data;
+      
+      // Add available items to cart
+      for (const item of availableItems) {
+        await addToCart(item, item.quantity);
+      }
+      
+      let message = `${availableItems.length} items added to cart!`;
+      if (unavailableItems.length > 0) {
+        message += `\n\n${unavailableItems.length} items were unavailable:`;
+        unavailableItems.forEach(item => {
+          message += `\n- ${item.name} (${item.reason})`;
+        });
+      }
+      
+      alert(message);
+    } catch (error) {
+      console.error('Error reordering:', error);
+      alert(error.response?.data?.message || 'Failed to add items to cart');
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (loading) {
@@ -74,9 +142,33 @@ const OrderHistoryPage = () => {
               </div>
               
               <div className="border-t pt-4 mt-4">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold">Total: ${order.totalPrice.toFixed(2)}</span>
                   <span className="text-sm text-gray-600">Payment: {order.paymentMethod}</span>
+                </div>
+                
+                <div className="flex gap-3">
+                  {canCancelOrder(order.status) && (
+                    <button
+                      onClick={() => handleCancelOrder(order._id)}
+                      disabled={actionLoading === order._id}
+                      className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>{actionLoading === order._id ? 'Cancelling...' : 'Cancel Order'}</span>
+                    </button>
+                  )}
+                  
+                  {['delivered', 'cancelled'].includes(order.status) && (
+                    <button
+                      onClick={() => handleOrderAgain(order._id)}
+                      disabled={actionLoading === order._id}
+                      className="flex items-center space-x-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>{actionLoading === order._id ? 'Adding...' : 'Order Again'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
